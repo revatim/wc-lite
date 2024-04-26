@@ -5,52 +5,6 @@ import argparse
 # argparse is a module that makes it easy to write user-friendly command-line interfaces. It is a standard library in Python.
 # The argparse module also automatically generates help and usage messages and issues errors when users give the program invalid arguments.
 
-def main(args):
-    """_summary_
-
-    Args:
-        args (_type_): _description_
-
-    Returns:
-        _type_: _description_
-      
-    Raises:
-        _type_: _description_
-    """
-    if (args.c):
-        if args.c.name != "<stdin>":
-            count = count_bytes(args.c.name)
-            if (count == None):
-                return
-            print(f"\t{count} {path.basename(args.c.name)}")
-        else:
-            count = count_bytes(args.c)
-            print(f"\t{count}")
-    elif (args.m):
-        if args.m.name != "<stdin>":
-            count = count_characters(args.m.name)
-            print(f"\t{count} {path.basename(args.m.name)}")
-        else:
-            count = count_characters(args.m)
-            print(f"\t{count}")
-    elif (args.w):
-        if args.w.name != "<stdin>":
-            count = count_words(args.w.name)
-            print(f"\t{count} {path.basename(args.w.name)}")
-        else:
-            count = count_words(args.w)
-            print(f"\t{count}")
-    elif (args.l):
-        if args.l.name != "<stdin>":
-            count = count_lines(args.l.name)
-            if (count == None):
-                return
-            print(f"\t{count} {path.basename(args.l.name)}")
-        else:
-            count = count_lines(args.l)
-            print(f"\t{count}")
-    return None
-
 def exception_handler(func):
     def wrapper(*args, **kwargs):
         file = kwargs.get('file', args[0] if args else None)
@@ -69,6 +23,28 @@ def exception_handler(func):
     return wrapper
 
 
+def main(args):
+    if args.c:
+        process_file(args.c, count_bytes)
+    elif args.m:
+        process_file(args.m, count_characters)
+    elif args.w:
+        process_file(args.w, count_words)
+    elif args.l:
+        process_file(args.l, count_lines)
+
+
+def process_file(arg, count_func):
+    if arg.name != "<stdin>":
+        count = count_func(arg.name)
+        if (count == None):
+            return
+        print(f"\t{count} {path.basename(arg.name)}")
+    else:
+        count = count_func(arg)
+        print(f"\t{count}")
+
+
 @exception_handler
 def count_bytes(file):
     """
@@ -85,20 +61,33 @@ def count_bytes(file):
         OSError: If the file cannot be opened
     """
     if file is sys.stdin:
-        stdin_content = sys.stdin.read().encode("utf-8")
+        stdin_content = sys.stdin.read()
         return len(bytes(stdin_content))
     else:
         return path.getsize(file)
 
 
 @exception_handler
-def count_characters(string):
-    raise NotImplementedError("Function not implemented")
+def count_characters(file):
+    # Character is a minimal unit of text. It can be a letter, number, punctuation mark, or a symbol.
+    if file is sys.stdin:
+        stdin_content = sys.stdin.read().encode("utf-8")
+        return len(stdin_content)
+    else:
+        with open(file, "r") as file_obj:
+            content = file_obj.read() # works for UTF-8 / ASCII encoding is that an assumption we should make ?
+        return len(content)
 
 
 @exception_handler
-def count_words(string):
-    raise NotImplementedError("Function not implemented")
+def count_words(file):
+    if file is sys.stdin:
+        stdin_content = sys.stdin.read().encode("utf-8")
+        return len(stdin_content.split())
+    else:
+        with open(file, "r") as file_obj:
+            content = file_obj.read()
+        return len(content.split())
 
 
 @exception_handler
@@ -112,7 +101,7 @@ def count_lines(file):
             total_lines = sum(1 for _ in file_obj)
         return total_lines
 
-   
+
 def arguments_setup():
     """
     This function sets up the arguments for the script, and provides help for user to understand the arguments
@@ -139,7 +128,7 @@ def arguments_setup():
         help="Count the number of characters in each input file. If no file is provided, read from standard input.",
     )
     
-     # -w: Flag Argument Counts the number of words in each input file
+    # -w: Flag Argument Counts the number of words in each input file
     parser.add_argument(
         "-w",
         nargs="?",
