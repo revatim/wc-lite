@@ -1,3 +1,4 @@
+from os import path
 import sys
 # sys module provides access to some variables used or maintained by the interpreter and to functions that interact strongly with the interpreter.
 import argparse
@@ -17,10 +18,58 @@ def main(args):
         _type_: _description_
     """
     if (args.c):
-        # todo: identify 
-        print("Count Characters")
+        if args.c.name != "<stdin>":
+            count = count_bytes(args.c.name)
+            if (count == None):
+                return
+            print(f"\t{count} {path.basename(args.c.name)}")
+        else:
+            count = count_bytes(args.c)
+            print(f"\t{count}")
+    elif (args.m):
+        if args.m.name != "<stdin>":
+            count = count_characters(args.m.name)
+            print(f"\t{count} {path.basename(args.m.name)}")
+        else:
+            count = count_characters(args.m)
+            print(f"\t{count}")
+    elif (args.w):
+        if args.w.name != "<stdin>":
+            count = count_words(args.w.name)
+            print(f"\t{count} {path.basename(args.w.name)}")
+        else:
+            count = count_words(args.w)
+            print(f"\t{count}")
+    elif (args.l):
+        if args.l.name != "<stdin>":
+            count = count_lines(args.l.name)
+            if (count == None):
+                return
+            print(f"\t{count} {path.basename(args.l.name)}")
+        else:
+            count = count_lines(args.l)
+            print(f"\t{count}")
     return None
 
+def exception_handler(func):
+    def wrapper(*args, **kwargs):
+        file = kwargs.get('file', args[0] if args else None)
+        try:
+            return func(*args, **kwargs)
+        # The argparse module in Python tries to open the file when it parses the command-line arguments when the file doesn't exist or cannot be opened for some other reason, it raises an error.
+        # FileNotFound, IsADirectory, IOError, PermissionError
+        except UnicodeDecodeError:
+            print(f"File: {path.basename(file)} contains invalid encoding.")
+        except MemoryError:
+            print(f"File: {path.basename(file)} is too large to be processed.")
+        except OSError:
+            print(f"File: {path.basename(file)} cannot be opened. An error occurred: {e}")
+        except Exception as e:
+            print(f"An error occurred: {e}")
+    return wrapper
+
+
+@exception_handler
 def count_bytes(file):
     """
     This function counts the number of bytes in a file
@@ -31,24 +80,39 @@ def count_bytes(file):
         int: Number of bytes in the file
     
     Raises: 
-        FileNotFoundError: If the file is not found
-        IsADirectoryError: If the file is a directory
-        IOError: If there is an error reading the file (e.g., due to corruption)
         UnicodeDecodeError: If the file contains invalid encoding
-        OSError: If the file is not accessible
+        MemoryError: If the file is too large to be processed
+        OSError: If the file cannot be opened
     """
-    
-    return None
+    if file is sys.stdin:
+        stdin_content = sys.stdin.read().encode("utf-8")
+        return len(bytes(stdin_content))
+    else:
+        return path.getsize(file)
 
+
+@exception_handler
 def count_characters(string):
     raise NotImplementedError("Function not implemented")
 
+
+@exception_handler
 def count_words(string):
     raise NotImplementedError("Function not implemented")
-  
-def count_lines(string):
-    raise NotImplementedError("Function not implemented")
-    
+
+
+@exception_handler
+def count_lines(file):
+    if file is sys.stdin:
+        stdin_content = sys.stdin.read().encode("utf-8")
+        lines = stdin_content.splitlines()
+        return len(lines)
+    else:
+        with open(file, "r") as file_obj:
+            total_lines = sum(1 for _ in file_obj)
+        return total_lines
+
+   
 def arguments_setup():
     """
     This function sets up the arguments for the script, and provides help for user to understand the arguments
