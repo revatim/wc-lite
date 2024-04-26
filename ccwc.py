@@ -1,9 +1,11 @@
+import locale
 from os import path
 import sys
 # sys module provides access to some variables used or maintained by the interpreter and to functions that interact strongly with the interpreter.
 import argparse
 # argparse is a module that makes it easy to write user-friendly command-line interfaces. It is a standard library in Python.
 # The argparse module also automatically generates help and usage messages and issues errors when users give the program invalid arguments.
+
 
 def exception_handler(func):
     def wrapper(*args, **kwargs):
@@ -32,6 +34,14 @@ def main(args):
         process_file(args.w, count_words)
     elif args.l:
         process_file(args.l, count_lines)
+    else:
+        if args.input_file is not None:
+            lines, words, bytes = count_all(args.input_file)
+            print(f"\t{lines} {words} {bytes} {path.basename(args.input_file)}")
+        else:
+            # todo:
+            lines, words, bytes = [0, 0, 0]
+            print(f"\t{lines} {words} {bytes}")
 
 
 def process_file(arg, count_func):
@@ -66,34 +76,43 @@ def count_bytes(file):
     else:
         return path.getsize(file)
 
-
 @exception_handler
 def count_characters(file):
+    # todo: 
+    # 339292 should be the final count getting 335045
     # Character is a minimal unit of text. It can be a letter, number, punctuation mark, or a symbol.
+    lang, encoding = locale.getdefaultlocale()
     if file is sys.stdin:
-        stdin_content = sys.stdin.read().encode("utf-8")
+        stdin_content = sys.stdin.read().encode(encoding)
         return len(stdin_content)
     else:
+        count = 0
         with open(file, "r") as file_obj:
-            content = file_obj.read() # works for UTF-8 / ASCII encoding is that an assumption we should make ?
-        return len(content)
+            for line in file_obj:
+                count += len(line.encode(encoding))
+        return count
 
 
 @exception_handler
 def count_words(file):
+    lang, encoding = locale.getdefaultlocale()
     if file is sys.stdin:
-        stdin_content = sys.stdin.read().encode("utf-8")
+        stdin_content = sys.stdin.read().encode(encoding)
         return len(stdin_content.split())
     else:
+        count = 0
         with open(file, "r") as file_obj:
-            content = file_obj.read()
-        return len(content.split())
+            # read line by line to make this more memory efficient
+            for line in file_obj:
+                count += len(line.encode(encoding).split())
+        return count
 
 
 @exception_handler
 def count_lines(file):
+    lang, encoding = locale.getdefaultlocale()
     if file is sys.stdin:
-        stdin_content = sys.stdin.read().encode("utf-8")
+        stdin_content = sys.stdin.read().encode(encoding)
         lines = stdin_content.splitlines()
         return len(lines)
     else:
@@ -101,7 +120,10 @@ def count_lines(file):
             total_lines = sum(1 for _ in file_obj)
         return total_lines
 
-
+@exception_handler
+def count_all(file):
+    return (count_lines(file), count_words(file), count_bytes(file))    
+    
 def arguments_setup():
     """
     This function sets up the arguments for the script, and provides help for user to understand the arguments
