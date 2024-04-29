@@ -78,18 +78,15 @@ def count_bytes(file):
 
 @exception_handler
 def count_characters(file):
-    # todo: 
-    # 339292 should be the final count getting 335045
-    # Character is a minimal unit of text. It can be a letter, number, punctuation mark, or a symbol.
     lang, encoding = locale.getdefaultlocale()
     if file is sys.stdin:
-        stdin_content = sys.stdin.read().encode(encoding)
+        stdin_content = sys.stdin.read().decode(encoding)
         return len(stdin_content)
     else:
         count = 0
-        with open(file, "r") as file_obj:
+        with open(file, "rb") as file_obj:
             for line in file_obj:
-                count += len(line.encode(encoding))
+                count += len(line.decode(encoding))
         return count
 
 

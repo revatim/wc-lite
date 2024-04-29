@@ -6,18 +6,22 @@ This Python script, `ccwc.py`, is a command-line utility that counts the number 
 ## Dependencies
 This script requires Python's built-in modules `sys` and `argparse`.
 
-## Usage
-You can run the script using Python and pass the `-`c` option followed by the name of the file you want to analyze.
+## Use of the Tool
 
-```bash
-python ccwc.py -c yourfile.txt
-```
+The tool takes a file or a pipe as an input and outputs file measurements according to the chosen option.
+The tool tries to follow wc syntax, the usage is as follows:
 
-## Examples
-<!-- ToDo: Add Examples here once completed -->
+```python3 main.py ccwc [option] filename```
+There are five options supported:
 
-## Functions
-<!-- ToDo: Add Description here once completed -->
+generic: without an option, outputs the number of lines, words and bytes in a file.
+-c: outputs the number of bytes in a file.
+-l: outputs the number of lines in a file.
+-w: outputs the number of words in a file.
+-m: outputs the number of chars in a file.
+The tool also supports a combination of input, where the ccwc options are as given above, in the form:
+
+```cat filename | python3 main.py ccwc [option]```
 
 ### Learning Journey
 This script is part of my journey learning programming. I'm working on small projects and challenges to improve my understanding of various programming languages and their standard libraries.
